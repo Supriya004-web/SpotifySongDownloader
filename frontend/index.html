@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Song Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: linear-gradient(145deg, #121212 0%, #1a1a1a 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+        .card { max-width: 680px; width: 100%; background: rgba(30, 30, 30, 0.8); backdrop-filter: blur(12px); border-radius: 2.5rem; padding: 2.5rem 2.2rem; box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.03); }
+        .header { display: flex; align-items: center; gap: 14px; margin-bottom: 2.2rem; }
+        .header i { font-size: 2.8rem; color: #1DB954; }
+        .header h1 { font-size: 1.9rem; font-weight: 700; background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header span { background: rgba(29, 185, 84, 0.15); padding: 0.2rem 0.9rem; border-radius: 60px; font-size: 0.7rem; font-weight: 600; color: #1DB954; margin-left: auto; }
+        .input-group { background: rgba(255, 255, 255, 0.04); border-radius: 100px; display: flex; align-items: center; padding: 0.3rem 0.3rem 0.3rem 1.8rem; border: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 1.8rem; }
+        .input-group:focus-within { border-color: #1DB954; box-shadow: 0 0 0 4px rgba(29, 185, 84, 0.15); }
+        .input-group input { background: transparent; border: none; padding: 1rem 0; font-size: 1rem; color: #f0f0f0; width: 100%; outline: none; }
+        .input-group input::placeholder { color: #6a6a6a; }
+        .input-group button { background: #1DB954; border: none; padding: 0.9rem 2rem; border-radius: 100px; font-weight: 600; font-size: 0.95rem; color: #000; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 14px rgba(29, 185, 84, 0.25); }
+        .input-group button:hover { background: #1ed760; transform: scale(1.02); }
+        .status-area { background: rgba(0, 0, 0, 0.25); border-radius: 1.8rem; padding: 1.5rem 1.8rem; margin: 1.8rem 0 1.5rem 0; border-left: 4px solid #1DB954; }
+        .song-preview { display: flex; align-items: center; gap: 1.2rem; }
+        .cover-placeholder { width: 60px; height: 60px; background: linear-gradient(135deg, #2a2a2a, #1a1a1a); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .song-meta { flex: 1; }
+        .song-meta .title { color: #fff; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .song-meta .title i { color: #1DB954; }
+        .song-meta .artist { color: #a0a0a0; font-size: 0.85rem; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+        .status-badge { display: flex; align-items: center; gap: 10px; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid rgba(255, 255, 255, 0.04); color: #b0b0b0; font-size: 0.85rem; }
+        .progress-wrapper { margin: 1rem 0 0.6rem 0; background: rgba(255, 255, 255, 0.04); height: 6px; border-radius: 20px; overflow: hidden; width: 100%; }
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #1DB954, #1ed760); border-radius: 20px; transition: width 0.25s ease; }
+        .action-hint { display: flex; justify-content: flex-end; font-size: 0.75rem; color: #5a5a5a; margin-top: 0.4rem; }
+        .download-btn-wrapper { display: flex; justify-content: flex-end; margin-top: 0.8rem; }
+        .download-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.8rem 2.2rem; border-radius: 60px; color: #ddd; font-weight: 500; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+        .download-btn:hover { background: rgba(29, 185, 84, 0.08); border-color: #1DB954; color: #fff; }
+        .download-btn i { color: #1DB954; }
+        .footer-note { margin-top: 2rem; text-align: center; color: #4a4a4a; font-size: 0.7rem; border-top: 1px solid rgba(255, 255, 255, 0.02); padding-top: 1.5rem; display: flex; justify-content: center; gap: 16px; }
+        @media (max-width: 500px) { .card { padding: 1.8rem 1.2rem; } .header h1 { font-size: 1.4rem; } .input-group { flex-wrap: wrap; background: transparent; padding: 0; border: none; gap: 12px; } .input-group input { background: rgba(255, 255, 255, 0.04); padding: 1rem 1.5rem; border-radius: 100px; border: 1px solid rgba(255, 255, 255, 0.05); } .input-group button { width: 100%; justify-content: center; padding: 1rem; } .song-preview { flex-direction: column; align-items: flex-start; } .download-btn-wrapper { justify-content: stretch; } .download-btn { width: 100%; justify-content: center; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <i class="fab fa-spotify"></i>
+            <h1>Song Grabber</h1>
+            <span>v2</span>
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-search"></i>
+            <input type="text" id="songInput" placeholder="Paste Spotify track link or name..." value="Blinding Lights" />
+            <button id="fetchBtn"><i class="fas fa-download"></i> Fetch</button>
+        </div>
+
+        <div class="status-area" id="statusArea">
+            <div class="song-preview">
+                <div class="cover-placeholder" id="coverIcon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="song-meta">
+                    <div class="title" id="songTitle">
+                        <i class="fas fa-check-circle" style="color:#1DB954;"></i>
+                        <span id="titleText">Blinding Lights</span>
+                    </div>
+                    <div class="artist" id="songArtist">
+                        <i class="fas fa-user"></i>
+                        <span id="artistText">The Weeknd</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-badge" id="statusBadge">
+                <i class="fas fa-circle" style="color: #1DB954; font-size: 0.6rem;"></i>
+                <span id="statusMessage">Ready · click "Fetch" or paste link</span>
+            </div>
+            <div class="progress-wrapper">
+                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+            </div>
+            <div class="action-hint" id="actionHint">
+                <span>⏱️ simulated download</span>
+            </div>
+        </div>
+
+        <div class="download-btn-wrapper">
+            <button class="download-btn" id="downloadBtn">
+                <i class="fas fa-arrow-down"></i> Download MP3
+                <span style="font-weight:300; opacity:0.5; margin-left:4px;">(demo)</span>
+            </button>
+        </div>
+
+        <div class="footer-note">
+            <span><i class="fas fa-lock"></i> Demo</span>
+            <span><i class="fas fa-headphones"></i> Spotify UI</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const songInput = document.getElementById('songInput');
+            const fetchBtn = document.getElementById('fetchBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const titleText = document.getElementById('titleText');
+            const artistText = document.getElementById('artistText');
+            const statusMessage = document.getElementById('statusMessage');
+            const progressFill = document.getElementById('progressFill');
+            const coverIcon = document.getElementById('coverIcon');
+            const actionHint = document.getElementById('actionHint');
+
+            let currentSong = {
+                title: 'Blinding Lights',
+                artist: 'The Weeknd',
+                url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT'
+            };
+
+            function updateSongUI(song) {
+                titleText.textContent = song.title || 'Unknown track';
+                artistText.textContent = song.artist || 'Unknown artist';
+                coverIcon.innerHTML = `<i class="fas fa-compact-disc" style="color:#1DB954;"></i>`;
+                statusMessage.textContent = `🎵 "${song.title}" · ${song.artist}`;
+                progressFill.style.width = '0%';
+                currentSong = { ...song };
+            }
+
+            async function handleFetch() {
+                const query = songInput.value.trim();
+                if (!query) {
+                    statusMessage.textContent = '⚠️ Please enter a track name or link';
+                    return;
+                }
+
+                fetchBtn.disabled = true;
+                fetchBtn.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> loading`;
+                statusMessage.textContent = '🔍 Searching...';
+                actionHint.innerHTML = `<i class="fas fa-spinner fa-pulse" style="color:#1DB954;"></i> fetching metadata`;
+
+                try {
+                    const response = await fetch('http://localhost:5000/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success && data.results.length > 0) {
+                        const song = data.results[0];
+                        updateSongUI({
+                            title: song.title,
+                            artist: song.artist,
+                            url: song.url
+                        });
+                        statusMessage.textContent = `✅ found · "${song.title}"`;
+                        actionHint.innerHTML = `✔️ metadata loaded · click download`;
+                    } else {
+                        statusMessage.textContent = '❌ No results found';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    statusMessage.textContent = '❌ Failed to fetch. Is backend running?';
+                    actionHint.innerHTML = `⚠️ make sure server is running on port 5000`;
+                } finally {
+                    fetchBtn.disabled = false;
+                    fetchBtn.innerHTML = `<i class="fas fa-download"></i> Fetch`;
+                }
+            }
+
+            async function handleDownload() {
+                const song = currentSong;
+                if (!song || !song.title) {
+                    statusMessage.textContent = '⚠️ No song loaded. Fetch a track first.';
+                    return;
+                }
+
+                downloadBtn.disabled = true;
+                fetchBtn.disabled = true;
+                downloadBtn.innerHTML = `<i class="fas fa-spinner fa-pulse"></i> downloading`;
+
+                try {
+                    statusMessage.textContent = `⬇️ Downloading "${song.title}" ...`;
+                    actionHint.innerHTML = `<i class="fas fa-spinner fa-pulse" style="color:#1DB954;"></i> connecting to backend...`;
+                    
+                    let progress = 0;
+                    const progressInterval = setInterval(() => {
+                        progress += Math.random() * 15 + 5;
+                        if (progress >= 100) progress = 100;
+                        progressFill.style.width = progress + '%';
+                    }, 300);
+
+                    const response = await fetch('http://localhost:5000/api/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            url: song.url || 'https://open.spotify.com/track/mock',
+                            title: song.title,
+                            artist: song.artist
+                        })
+                    });
+
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '100%';
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Download failed');
+                    }
+
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = `${song.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp3`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(downloadUrl);
+
+                    statusMessage.textContent = `🎧 "${song.title}" downloaded successfully!`;
+                    actionHint.innerHTML = `✅ download complete!`;
+
+                } catch (error) {
+                    console.error('Download error:', error);
+                    statusMessage.textContent = `❌ ${error.message || 'Download failed'}`;
+                    actionHint.innerHTML = `⚠️ try again or check console`;
+                } finally {
+                    downloadBtn.disabled = false;
+                    fetchBtn.disabled = false;
+                    downloadBtn.innerHTML = `<i class="fas fa-arrow-down"></i> Download MP3 <span style="font-weight:300; opacity:0.5; margin-left:4px;">(demo)</span>`;
+                }
+            }
+
+            fetchBtn.addEventListener('click', handleFetch);
+            downloadBtn.addEventListener('click', handleDownload);
+
+            songInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    fetchBtn.click();
+                }
+            });
+
+            updateSongUI({
+                title: 'Blinding Lights',
+                artist: 'The Weeknd',
+                url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT'
+            });
+            statusMessage.textContent = 'Ready · click "Fetch" or paste link';
+            actionHint.innerHTML = `<span>⏱️ simulated download</span>`;
+            progressFill.style.width = '0%';
+
+            if (!songInput.value) {
+                songInput.value = 'Blinding Lights';
+            }
+
+            console.log('🎵 Spotify Downloader - Backend Connected');
+        })();
+    </script>
+</body>
+</html>
